@@ -34,8 +34,7 @@ func Top10(text string) []string {
 		return wordsFrequencies[uniqueWords[i]] > wordsFrequencies[uniqueWords[j]]
 	})
 
-	top10 := 10
-	if len(uniqueWords) > top10 {
+	if top10 := 10; len(uniqueWords) > top10 {
 		return uniqueWords[:top10]
 	}
 
