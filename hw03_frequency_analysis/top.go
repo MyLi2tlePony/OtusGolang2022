@@ -36,7 +36,7 @@ func Top10(text string) []string {
 
 	top10 := 10
 	if len(uniqueWords) > top10 {
-		return uniqueWords[:10]
+		return uniqueWords[:top10]
 	}
 
 	return uniqueWords
