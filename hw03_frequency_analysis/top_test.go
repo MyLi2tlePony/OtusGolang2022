@@ -42,7 +42,18 @@ func TestTop10(t *testing.T) {
 		}
 		require.Equal(t, expected, Top10(text2))
 	})
+
+	t.Run("short text", func(t *testing.T) {
+		expected := []string{
+			"a", // 5
+			"b", // 4
+			"f", // 4
+		}
+		require.Equal(t, expected, Top10(text3))
+	})
 }
+
+var text3 = `a a a a a b b b B F f F f`
 
 var text2 = `Как видите,   спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
