@@ -42,10 +42,69 @@ func TestList(t *testing.T) {
 		l.MoveToFront(l.Front()) // [80, 60, 40, 10, 30, 50, 70]
 		l.MoveToFront(l.Back())  // [70, 80, 60, 40, 10, 30, 50]
 
-		elems := make([]int, 0, l.Len())
-		for i := l.Front(); i != nil; i = i.Next {
-			elems = append(elems, i.Value.(int))
-		}
-		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
+		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, listToArray(l))
 	})
+
+	t.Run("all methods", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(1)
+		require.Equal(t, []int{1}, listToArray(l))
+
+		l.PushBack(2)
+		require.Equal(t, []int{1, 2}, listToArray(l))
+
+		require.Equal(t, 2, l.Len())
+		require.Equal(t, 1, l.Front().Value)
+		require.Equal(t, 2, l.Back().Value)
+
+		l.PushFront(0)
+		require.Equal(t, []int{0, 1, 2}, listToArray(l))
+
+		l.PushBack(3)
+		require.Equal(t, []int{0, 1, 2, 3}, listToArray(l))
+
+		require.Equal(t, 4, l.Len())
+		require.Equal(t, 0, l.Front().Value)
+		require.Equal(t, 3, l.Back().Value)
+
+		l.MoveToFront(l.Front())
+		require.Equal(t, []int{0, 1, 2, 3}, listToArray(l))
+
+		l.MoveToFront(l.Front().Next)
+		require.Equal(t, []int{1, 0, 2, 3}, listToArray(l))
+
+		l.MoveToFront(l.Front().Next)
+		require.Equal(t, []int{0, 1, 2, 3}, listToArray(l))
+
+		require.Equal(t, 4, l.Len())
+		require.Equal(t, 0, l.Front().Value)
+		require.Equal(t, 3, l.Back().Value)
+
+		l.MoveToFront(l.Back())
+		require.Equal(t, []int{3, 0, 1, 2}, listToArray(l))
+
+		l.MoveToFront(l.Back())
+		require.Equal(t, []int{2, 3, 0, 1}, listToArray(l))
+
+		l.MoveToFront(l.Back())
+		require.Equal(t, []int{1, 2, 3, 0}, listToArray(l))
+
+		l.MoveToFront(l.Back())
+		require.Equal(t, []int{0, 1, 2, 3}, listToArray(l))
+
+		require.Equal(t, 4, l.Len())
+		require.Equal(t, 0, l.Front().Value)
+		require.Equal(t, 3, l.Back().Value)
+	})
+}
+
+func listToArray(list List) []int {
+	elems := make([]int, 0, list.Len())
+
+	for i := list.Front(); i != nil; i = i.Next {
+		elems = append(elems, i.Value.(int))
+	}
+
+	return elems
 }
