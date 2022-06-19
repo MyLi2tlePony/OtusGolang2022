@@ -52,9 +52,8 @@ func (cache *lruCache) Get(key Key) (interface{}, bool) {
 	defer cache.mutex.Unlock()
 
 	item := cache.items[key]
-	isNewItem := item == nil
 
-	if isNewItem {
+	if isNewItem := item == nil; isNewItem {
 		return nil, false
 	}
 
