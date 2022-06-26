@@ -20,11 +20,32 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		}
 	}
 
+	out = func(in In) Out {
+		out := make(Bi)
+
+		go func() {
+			isClosed := false
+			for v := range in {
+				select {
+				case <-done:
+					close(out)
+					isClosed = true
+				default:
+					out <- v
+				}
+			}
+			if !isClosed {
+				close(out)
+			}
+		}()
+
+		return out
+	}(out)
+
 	go func() {
 		for {
 			select {
 			case <-done:
-				close(bi)
 				return
 			case value, ok := <-in:
 				if ok {
