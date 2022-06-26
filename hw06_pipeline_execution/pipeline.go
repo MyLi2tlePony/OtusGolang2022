@@ -12,15 +12,7 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	var out Out
 	bi := make(Bi)
 
-	for index, stage := range stages {
-		if index == 0 {
-			out = stage(bi)
-		} else {
-			out = stage(out)
-		}
-	}
-
-	out = func(in In) Out {
+	exitStage := func(in In) Out {
 		out := make(Bi)
 
 		go func() {
@@ -40,7 +32,15 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		}()
 
 		return out
-	}(out)
+	}
+
+	for index, stage := range stages {
+		if index == 0 {
+			out = stage(bi)
+		} else {
+			out = exitStage(stage(out))
+		}
+	}
 
 	go func() {
 		for {
