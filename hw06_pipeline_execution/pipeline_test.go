@@ -102,7 +102,7 @@ func TestPipeline(t *testing.T) {
 			close(in)
 		}()
 
-		result := make([]string, 0, 10)
+		result := make([]string, 0, 20)
 
 		require.Eventually(t, func() bool {
 			for s := range ExecutePipeline(in, nil, stages...) {

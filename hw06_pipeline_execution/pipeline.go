@@ -16,18 +16,20 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		out := make(Bi)
 
 		go func() {
-			isClosed := false
+			defer close(out)
+			exit := false
+			
 			for v := range in {
 				select {
 				case <-done:
-					close(out)
-					isClosed = true
+					exit = true
 				default:
 					out <- v
 				}
-			}
-			if !isClosed {
-				close(out)
+
+				if exit {
+					return
+				}
 			}
 		}()
 
