@@ -17,8 +17,8 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 
 		go func() {
 			defer close(out)
+
 			exit := false
-			
 			for v := range in {
 				select {
 				case <-done:
