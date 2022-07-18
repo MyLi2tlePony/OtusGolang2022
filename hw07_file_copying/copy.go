@@ -7,9 +7,8 @@ import (
 )
 
 var (
-	ErrUnsupportedFile          = errors.New("unsupported file")
-	ErrOffsetExceedsFileSize    = errors.New("offset exceeds file size")
-	ErrOffsetIsGreaterThanLimit = errors.New("offset is greater than limit")
+	ErrUnsupportedFile       = errors.New("unsupported file")
+	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) (err error) {
@@ -17,19 +16,15 @@ func Copy(fromPath, toPath string, offset, limit int64) (err error) {
 	if err != nil {
 		return err
 	}
-	fromFileSize := fromFileInfo.Size()
 
 	if !fromFileInfo.Mode().IsRegular() {
 		return ErrUnsupportedFile
 	}
 	if limit == 0 {
-		limit = fromFileSize
+		limit = fromFileInfo.Size()
 	}
-	if offset > fromFileSize {
+	if offset > fromFileInfo.Size() {
 		return ErrOffsetExceedsFileSize
-	}
-	if offset > limit {
-		return ErrOffsetIsGreaterThanLimit
 	}
 
 	fromFile, err := os.Open(fromPath)
@@ -61,14 +56,17 @@ func Copy(fromPath, toPath string, offset, limit int64) (err error) {
 	}()
 
 	bar := StartNewProgressBar(limit)
+	defer bar.Finish()
 
-	for offset < limit {
+	for offset := int64(0); offset < limit; {
 		written, err := io.CopyN(toFile, fromFile, 1)
+
 		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err
 		}
+
 		offset += written
 		bar.Add(written)
 	}

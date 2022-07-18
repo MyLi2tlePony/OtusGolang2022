@@ -39,9 +39,10 @@ func (pb *progressBar) Add(value int64) {
 	if pb.currentValue >= pb.maxValue {
 		pb.finish = true
 		pb.currentValue = pb.maxValue
+		fmt.Println("\r", pb.createOutput())
+	} else {
+		fmt.Print("\r", pb.createOutput())
 	}
-
-	fmt.Print("\r", pb.createOutput())
 }
 
 func (pb *progressBar) Finish() {
@@ -55,7 +56,7 @@ func (pb *progressBar) Finish() {
 	pb.finish = true
 	pb.currentValue = pb.maxValue
 
-	fmt.Print("\r", pb.createOutput())
+	fmt.Println("\r", pb.createOutput())
 }
 
 func (pb *progressBar) createOutput() string {
