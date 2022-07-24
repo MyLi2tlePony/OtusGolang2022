@@ -1,5 +1,21 @@
 package main
 
+import (
+	"fmt"
+	"os"
+)
+
 func main() {
-	// Place your code here.
+	if len(os.Args) < 2 {
+		fmt.Println("Количество аргументов должно быть больше 1")
+		return
+	}
+
+	env, err := ReadDir(os.Args[1])
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	code := RunCmd(os.Args[2:], env)
+	fmt.Println(code)
 }
