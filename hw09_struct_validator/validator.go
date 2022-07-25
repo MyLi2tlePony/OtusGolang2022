@@ -51,13 +51,13 @@ func Validate(item interface{}) error {
 
 	validationErrors := make(ValidationErrors, 0)
 
-	for fieldId := 0; fieldId < value.NumField(); fieldId++ {
-		structField := value.Type().Field(fieldId)
+	for fieldID := 0; fieldID < value.NumField(); fieldID++ {
+		structField := value.Type().Field(fieldID)
 
 		if tag, ok := structField.Tag.Lookup(tagName); ok {
 			validators := getValidators(tag)
-			kind := value.Field(fieldId).Kind()
-			field := value.Field(fieldId)
+			kind := value.Field(fieldID).Kind()
+			field := value.Field(fieldID)
 
 			if err := validateField(validators, kind, field); err != nil {
 				validationErrors = append(validationErrors, ValidationError{
@@ -90,9 +90,7 @@ func getValidators(tag string) []Validator {
 }
 
 func validateField(validators []Validator, kind reflect.Kind, field reflect.Value) error {
-
-	switch kind {
-	case reflect.String:
+	if kind == reflect.String {
 		value := field.String()
 		for _, validator := range validators {
 			err := validateString(value, validator)
