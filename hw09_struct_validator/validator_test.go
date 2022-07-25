@@ -1,7 +1,6 @@
 package hw09structvalidator
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -17,7 +16,7 @@ type (
 		Email  string   `validate:"regexp:^\\w+@\\w+\\.\\w+$"`
 		Role   UserRole `validate:"in:admin,stuff"`
 		Phones []string `validate:"len:11"`
-		meta   json.RawMessage
+		// meta   json.RawMessage
 	}
 
 	App struct {
@@ -47,6 +46,18 @@ func TestValidate(t *testing.T) {
 		// ...
 		// Place your code here.
 	}
+
+	t.Run("base case", func(t *testing.T) {
+		Validate(&User{
+			ID:    "10",
+			Name:  "Andrey",
+			Age:   21,
+			Email: "shabandrew@mail.ru",
+			Role:  "some role",
+		})
+
+		// require.Nil(t, err)
+	})
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
