@@ -49,14 +49,133 @@ func TestCache(t *testing.T) {
 		require.Nil(t, val)
 	})
 
-	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+	t.Run("base purge logic", func(t *testing.T) {
+		cache := NewCache(3)
+		cache.Set("1", 1)
+		cache.Set("2", 2)
+		cache.Set("3", 3)
+
+		val, ok := cache.Get("1")
+		require.True(t, ok)
+		require.Equal(t, 1, val)
+
+		val, ok = cache.Get("2")
+		require.True(t, ok)
+		require.Equal(t, 2, val)
+
+		val, ok = cache.Get("3")
+		require.True(t, ok)
+		require.Equal(t, 3, val)
+
+		cache.Set("4", 4)
+
+		_, ok = cache.Get("1")
+		require.False(t, ok)
+
+		val, ok = cache.Get("2")
+		require.True(t, ok)
+		require.Equal(t, 2, val)
+
+		val, ok = cache.Get("3")
+		require.True(t, ok)
+		require.Equal(t, 3, val)
+
+		val, ok = cache.Get("4")
+		require.True(t, ok)
+		require.Equal(t, 4, val)
+	})
+
+	t.Run("clear", func(t *testing.T) {
+		cache := NewCache(3)
+		cache.Set("1", 1)
+		cache.Set("2", 2)
+		cache.Set("3", 3)
+
+		cache.Clear()
+
+		_, ok := cache.Get("1")
+		require.False(t, ok)
+
+		_, ok = cache.Get("2")
+		require.False(t, ok)
+
+		_, ok = cache.Get("3")
+		require.False(t, ok)
 	})
 }
 
-func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // Remove me if task with asterisk completed.
+func TestAdvancedPurgeLogic(t *testing.T) {
+	cache := NewCache(3)
+	cache.Set("1", 1)
+	cache.Set("2", 2)
+	cache.Set("3", 3)
 
+	cache.Set("1", 11)
+	val, ok := cache.Get("1")
+	require.True(t, ok)
+	require.Equal(t, 11, val)
+
+	cache.Set("2", 22)
+	val, ok = cache.Get("2")
+	require.True(t, ok)
+	require.Equal(t, 22, val)
+
+	cache.Set("3", 33)
+	val, ok = cache.Get("3")
+	require.True(t, ok)
+	require.Equal(t, 33, val)
+
+	cache.Set("4", 4)
+	val, ok = cache.Get("4")
+	require.True(t, ok)
+	require.Equal(t, 4, val)
+
+	cache.Set("4", 44)
+	val, ok = cache.Get("4")
+	require.True(t, ok)
+	require.Equal(t, 44, val)
+
+	_, ok = cache.Get("1")
+	require.False(t, ok)
+
+	val, ok = cache.Get("2")
+	require.True(t, ok)
+	require.Equal(t, 22, val)
+
+	val, ok = cache.Get("3")
+	require.True(t, ok)
+	require.Equal(t, 33, val)
+
+	val, ok = cache.Get("4")
+	require.True(t, ok)
+	require.Equal(t, 44, val)
+
+	cache.Set("5", 55)
+	cache.Set("6", 66)
+
+	_, ok = cache.Get("1")
+	require.False(t, ok)
+
+	_, ok = cache.Get("2")
+	require.False(t, ok)
+
+	_, ok = cache.Get("3")
+	require.False(t, ok)
+
+	val, ok = cache.Get("4")
+	require.True(t, ok)
+	require.Equal(t, 44, val)
+
+	val, ok = cache.Get("5")
+	require.True(t, ok)
+	require.Equal(t, 55, val)
+
+	val, ok = cache.Get("6")
+	require.True(t, ok)
+	require.Equal(t, 66, val)
+}
+
+func TestCacheMultithreading(t *testing.T) {
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
