@@ -3,6 +3,8 @@ package hw09structvalidator
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type UserRole string
@@ -35,37 +37,69 @@ type (
 	}
 )
 
-func TestValidate(t *testing.T) {
-	tests := []struct {
-		in          interface{}
-		expectedErr error
-	}{
-		{
-			// Place your code here.
+var tests = []struct {
+	in          interface{}
+	expectedErr error
+}{
+	{
+		in: &User{
+			ID:    "10",
+			Name:  "Andrey",
+			Age:   21,
+			Email: "shabandrew@mail.ru",
+			Role:  "main role",
 		},
-		// ...
-		// Place your code here.
-	}
-
-	t.Run("base case", func(t *testing.T) {
-		Validate(&User{
+		expectedErr: nil,
+	},
+	{
+		in: &User{
+			ID:    "11",
+			Name:  "Коля",
+			Age:   50,
+			Email: "kolan@gmail.com",
+			Role:  "new role",
+		},
+		expectedErr: nil,
+	},
+	{
+		in: &User{
+			ID:    "46mira46",
+			Name:  "Mira",
+			Age:   21,
+			Email: "marathebest@mail.ru",
+			Role:  "no role",
+		},
+		expectedErr: nil,
+	},
+	{
+		in: &User{
+			ID:    "10",
+			Name:  "Andrey",
+			Age:   21,
+			Email: "shabandrew@mail.ru",
+			Role:  "kjbvaskjdvckjladklvn role",
+		},
+		expectedErr: nil,
+	},
+	{
+		in: &User{
 			ID:    "10",
 			Name:  "Andrey",
 			Age:   21,
 			Email: "shabandrew@mail.ru",
 			Role:  "some role",
-		})
+		},
+		expectedErr: nil,
+	},
+}
 
-		// require.Nil(t, err)
-	})
-
-	for i, tt := range tests {
+func TestValidate(t *testing.T) {
+	for i, test := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			tt := tt
+			test := test
 			t.Parallel()
 
-			// Place your code here.
-			_ = tt
+			require.Equal(t, nil, Validate(test))
 		})
 	}
 }
