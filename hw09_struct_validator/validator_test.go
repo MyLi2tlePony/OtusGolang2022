@@ -12,7 +12,7 @@ type UserRole string
 // Test the function on different structures and other types.
 type (
 	User struct {
-		ID     string `json:"id" validate:"len:36"`
+		ID     string `json:"id" validate:"len:10"`
 		Name   string
 		Age    int      `validate:"min:18|max:50"`
 		Email  string   `validate:"regexp:^\\w+@\\w+\\.\\w+$"`
@@ -20,76 +20,132 @@ type (
 		Phones []string `validate:"len:11"`
 		// meta   json.RawMessage
 	}
-
-	App struct {
-		Version string `validate:"len:5"`
-	}
-
-	Token struct {
-		Header    []byte
-		Payload   []byte
-		Signature []byte
-	}
-
-	Response struct {
-		Code int    `validate:"in:200,404,500"`
-		Body string `json:"omitempty"`
-	}
 )
 
 var tests = []struct {
 	in          interface{}
-	expectedErr error
+	expectedErr ValidationErrors
 }{
 	{
-		in: &User{
-			ID:    "10",
-			Name:  "Andrey",
-			Age:   21,
-			Email: "shabandrew@mail.ru",
-			Role:  "main role",
+		in: User{
+			ID:     "10",
+			Name:   "Andrey",
+			Age:    21,
+			Email:  "shabandrew@mail.ru",
+			Role:   "admin",
+			Phones: []string{"89045267897", "12345678"},
 		},
 		expectedErr: nil,
 	},
 	{
-		in: &User{
-			ID:    "11",
-			Name:  "Коля",
-			Age:   50,
-			Email: "kolan@gmail.com",
-			Role:  "new role",
+		in: User{
+			ID:     "11",
+			Name:   "Коля",
+			Age:    50,
+			Email:  "kolan@gmail.com",
+			Role:   "admin",
+			Phones: []string{"89045267897", "12345678", "12345678"},
 		},
 		expectedErr: nil,
 	},
 	{
-		in: &User{
+		in: User{
 			ID:    "46mira46",
 			Name:  "Mira",
 			Age:   21,
 			Email: "marathebest@mail.ru",
-			Role:  "no role",
+			Role:  "admin",
 		},
 		expectedErr: nil,
 	},
 	{
-		in: &User{
+		in: User{
 			ID:    "10",
 			Name:  "Andrey",
 			Age:   21,
 			Email: "shabandrew@mail.ru",
-			Role:  "kjbvaskjdvckjladklvn role",
+			Role:  "stuff",
 		},
 		expectedErr: nil,
 	},
 	{
-		in: &User{
+		in: User{
 			ID:    "10",
 			Name:  "Andrey",
 			Age:   21,
 			Email: "shabandrew@mail.ru",
-			Role:  "some role",
+			Role:  "stuff",
 		},
 		expectedErr: nil,
+	},
+	{
+		in: User{
+			ID:    "012345678910",
+			Name:  "Andrey",
+			Age:   21,
+			Email: "shabandrew@mail.ru",
+			Role:  "stuff",
+		},
+		expectedErr: []ValidationError{{
+			Field: "ID",
+			Err:   ErrStringLen,
+		}},
+	},
+	{
+		in: User{
+			ID:     "10",
+			Name:   "Andrey",
+			Age:    10,
+			Email:  "shabandrew@mail.ru",
+			Role:   "admin",
+			Phones: []string{"89045267897", "12345678"},
+		},
+		expectedErr: []ValidationError{{
+			Field: "Age",
+			Err:   ErrIntMin,
+		}},
+	},
+	{
+		in: User{
+			ID:     "10",
+			Name:   "Andrey",
+			Age:    100,
+			Email:  "shabandrew@mail.ru",
+			Role:   "admin",
+			Phones: []string{"89045267897", "12345678"},
+		},
+		expectedErr: []ValidationError{{
+			Field: "Age",
+			Err:   ErrIntMax,
+		}},
+	},
+	{
+		in: User{
+			ID:     "10",
+			Name:   "Andrey",
+			Age:    21,
+			Email:  "@mail.ru",
+			Role:   "admin",
+			Phones: []string{"89045267897", "12345678"},
+		},
+		expectedErr: []ValidationError{{
+			Field: "Email",
+			Err:   ErrStringRegexp,
+		}},
+	},
+	{
+		in: User{
+			ID:     "10",
+			Name:   "Andrey",
+			Age:    21,
+			Email:  "shabandrew@mail.ru",
+			Role:   "student",
+			Phones: []string{"89045267897", "12345678"},
+		},
+		expectedErr: []ValidationError{{
+			Field: "Role",
+			Err:   ErrStringIn,
+		}},
 	},
 }
 
@@ -99,7 +155,7 @@ func TestValidate(t *testing.T) {
 			test := test
 			t.Parallel()
 
-			require.Equal(t, nil, Validate(test))
+			require.Equal(t, test.expectedErr, Validate(test.in))
 		})
 	}
 }

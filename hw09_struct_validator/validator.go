@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type ValidationError struct {
@@ -25,8 +26,7 @@ var (
 	regexpGetValidatorValue   = regexp.MustCompile(`[^:]+$`)
 	regexpParseValidatorValue = regexp.MustCompile(`[^,]+`)
 
-	ErrInterfaceNotPointer = errors.New("interface must be a pointer")
-	ErrInterfaceNotStruct  = errors.New("interface must be a struct")
+	ErrInterfaceNotStruct = errors.New("interface must be a struct")
 
 	ErrNotImplementedType = errors.New("not implemented type")
 	ErrNotImplementedTag  = errors.New("not implemented tag")
@@ -43,26 +43,27 @@ var (
 const tagName = "validate"
 
 func (v ValidationErrors) Error() string {
-	resultError := ""
+	resultError := strings.Builder{}
 
 	for _, validationError := range v {
-		resultError += validationError.Field + ": " + validationError.Err.Error() + "\n"
+		resultError.WriteString(validationError.Field + ": " + validationError.Err.Error() + "\n")
 	}
 
-	return resultError
+	return resultError.String()
 }
 
-func Validate(item interface{}) error {
-	if reflect.ValueOf(item).Kind() != reflect.Struct {
-		return ErrInterfaceNotStruct
-	}
-
-	value := reflect.ValueOf(item).Elem()
-	if !value.CanAddr() {
-		return ErrInterfaceNotPointer
-	}
-
+func Validate(val interface{}) ValidationErrors {
 	validationErrors := make(ValidationErrors, 0)
+
+	value := reflect.ValueOf(val)
+
+	if value.Kind() != reflect.Struct {
+		validationErrors = append(validationErrors, ValidationError{
+			Field: "",
+			Err:   ErrInterfaceNotStruct,
+		})
+		return validationErrors
+	}
 
 	for fieldID := 0; fieldID < value.NumField(); fieldID++ {
 		structField := value.Type().Field(fieldID)
@@ -131,6 +132,10 @@ func validateField(validators []Validator, kind reflect.Kind, field reflect.Valu
 }
 
 func validateSlice(field reflect.Value, validators []Validator) error {
+	if field.Len() == 0 {
+		return nil
+	}
+
 	fieldKind := field.Index(0).Kind()
 
 	switch fieldKind { // nolint:exhaustive
@@ -175,7 +180,7 @@ func validateString(value string, validators []Validator) error {
 				return err
 			}
 
-			if len([]rune(value)) != length {
+			if len([]rune(value)) > length {
 				return ErrStringLen
 			}
 		case "in":
