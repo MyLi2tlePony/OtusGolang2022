@@ -1,6 +1,82 @@
 package main
 
+import (
+	"errors"
+	"flag"
+	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+)
+
+var (
+	ErrArgsNumber = errors.New("error arguments number")
+	timeout       time.Duration
+)
+
+func init() {
+	flag.DurationVar(&timeout, "timeout", 10*time.Second, "timeout for connecting to the server")
+}
+
 func main() {
-	// Place your code here,
-	// P.S. Do not rush to throw context down, think think if it is useful with blocking operation?
+	flag.Parse()
+
+	args := os.Args
+	argsLen := len(os.Args)
+
+	if argsLen < 3 || argsLen > 4 {
+		fmt.Println(ErrArgsNumber)
+		return
+	}
+
+	host := args[argsLen-2]
+	port := args[argsLen-1]
+
+	l, err := net.Listen("tcp", net.JoinHostPort(host, port))
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer l.Close()
+
+	client := NewTelnetClient(net.JoinHostPort(host, port), timeout, os.Stdin, os.Stdout)
+	if err := client.Connect(); err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("I'm telnet client")
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		if err := client.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		if err := client.Receive(); err != nil {
+			fmt.Println(err)
+		}
+
+		wg.Done()
+	}()
+
+	go func() {
+		if err := client.Send(); err != nil {
+			fmt.Println(err)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	fmt.Println("Bye - bye")
 }

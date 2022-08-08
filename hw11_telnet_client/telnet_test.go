@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net"
 	"sync"
 	"testing"
@@ -29,7 +29,7 @@ func TestTelnetClient(t *testing.T) {
 			timeout, err := time.ParseDuration("10s")
 			require.NoError(t, err)
 
-			client := NewTelnetClient(l.Addr().String(), timeout, ioutil.NopCloser(in), out)
+			client := NewTelnetClient(l.Addr().String(), timeout, io.NopCloser(in), out)
 			require.NoError(t, client.Connect())
 			defer func() { require.NoError(t, client.Close()) }()
 
@@ -56,6 +56,57 @@ func TestTelnetClient(t *testing.T) {
 			require.Equal(t, "hello\n", string(request)[:n])
 
 			n, err = conn.Write([]byte("world\n"))
+			require.NoError(t, err)
+			require.NotEqual(t, 0, n)
+		}()
+
+		wg.Wait()
+	})
+
+	t.Run("hard case", func(t *testing.T) {
+		l, err := net.Listen("tcp", "127.0.0.1:")
+		require.NoError(t, err)
+		defer func() { require.NoError(t, l.Close()) }()
+
+		var wg sync.WaitGroup
+		wg.Add(2)
+
+		go func() {
+			defer wg.Done()
+
+			in := &bytes.Buffer{}
+			out := &bytes.Buffer{}
+
+			timeout, err := time.ParseDuration("10s")
+			require.NoError(t, err)
+
+			client := NewTelnetClient(l.Addr().String(), timeout, io.NopCloser(in), out)
+			require.NoError(t, client.Connect())
+			defer func() { require.NoError(t, client.Close()) }()
+
+			in.WriteString("hi\n")
+			err = client.Send()
+			require.NoError(t, err)
+
+			err = client.Receive()
+			require.NoError(t, err)
+			require.Equal(t, "welcome\n", out.String())
+		}()
+
+		go func() {
+			defer wg.Done()
+
+			conn, err := l.Accept()
+			require.NoError(t, err)
+			require.NotNil(t, conn)
+			defer func() { require.NoError(t, conn.Close()) }()
+
+			request := make([]byte, 1024)
+			n, err := conn.Read(request)
+			require.NoError(t, err)
+			require.Equal(t, "hi\n", string(request)[:n])
+
+			n, err = conn.Write([]byte("welcome\n"))
 			require.NoError(t, err)
 			require.NotEqual(t, 0, n)
 		}()
