@@ -77,6 +77,4 @@ func main() {
 	}()
 
 	wg.Wait()
-
-	fmt.Println("Bye - bye")
 }
