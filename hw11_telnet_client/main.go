@@ -46,7 +46,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("I'm telnet client")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
