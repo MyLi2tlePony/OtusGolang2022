@@ -61,17 +61,12 @@ func main() {
 	wg.Add(2)
 
 	go func() {
-		if err := client.Receive(); err != nil {
-			fmt.Println(err)
-		}
-
+		client.Receive()
 		wg.Done()
 	}()
 
 	go func() {
-		if err := client.Send(); err != nil {
-			fmt.Println(err)
-		}
+		client.Send()
 		wg.Done()
 	}()
 
