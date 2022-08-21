@@ -1,3 +1,5 @@
+include .env
+
 BIN := "./bin/calendar"
 DOCKER_IMG="calendar:develop"
 
@@ -16,6 +18,9 @@ build-img:
 		-t $(DOCKER_IMG) \
 		-f build/Dockerfile .
 
+pull-postgres:
+	docker pull postgres
+
 run-img: build-img
 	docker run $(DOCKER_IMG)
 
@@ -31,4 +36,20 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-.PHONY: build run build-img run-img version test lint
+postgres:
+	docker run --name postgresdb --env POSTGRES_PASSWORD="1234512345" --publish "5436:5432" --detach --rm postgres
+
+createdb:
+	docker exec -it postgresdb createdb --username postgres calendardb
+
+dropdb:
+	docker exec -it postgresdb dropdb calendardb
+
+migrateup:
+	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose up
+
+migratedown:
+	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose down
+
+
+.PHONY: build run build-img run-img version test lint pull-postgres postgres createdb dropdb migrateup migratedown
