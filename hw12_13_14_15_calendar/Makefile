@@ -1,5 +1,3 @@
-include .env
-
 BIN := "./bin/calendar"
 DOCKER_IMG="calendar:develop"
 
