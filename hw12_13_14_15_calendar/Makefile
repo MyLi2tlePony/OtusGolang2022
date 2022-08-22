@@ -25,9 +25,6 @@ run-img: build-img
 version: build
 	$(BIN) version
 
-test:
-	go test -race ./internal/...
-
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.41.1
 
@@ -40,14 +37,16 @@ postgres:
 createdb:
 	docker exec -it postgresdb createdb --username postgres calendardb
 
-dropdb:
-	docker exec -it postgresdb dropdb calendardb
-
 migrateup:
 	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose up
+
+test:
+	go test -race ./internal/...
 
 migratedown:
 	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose down
 
+dropdb:
+	docker exec -it postgresdb dropdb calendardb
 
-.PHONY: build run build-img run-img version test lint pull-postgres postgres createdb dropdb migrateup migratedown
+.PHONY: build run build-img run-img version lint pull-postgres postgres createdb migrateup test migratedown dropdb
