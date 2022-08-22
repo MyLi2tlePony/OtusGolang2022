@@ -208,7 +208,12 @@ func (s *Storage) DeleteEvent(ctx context.Context, eventID string) error {
 }
 
 func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) (err error) {
-	sql := `UPDATE events SET title = $1, description = $2, beginning = $3, finish = $4, notification = $5 WHERE id = %6;`
+	sql := `UPDATE
+				events
+			SET
+				title = $2, description = $3, beginning = $4, finish = $5, notification = $6, userid = $7
+			WHERE
+				id = $1;`
 
 	conn, err := pgx.Connect(ctx, s.connString)
 	if err != nil {
@@ -237,7 +242,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) (err err
 	}()
 
 	_, err = conn.Exec(ctx, sql,
-		event.Title, event.Description, event.Beginning, event.Finish, event.Notification, event.ID)
+		event.ID, event.Title, event.Description, event.Beginning, event.Finish, event.Notification, event.UserID)
 	return err
 }
 

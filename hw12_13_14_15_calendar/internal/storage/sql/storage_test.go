@@ -109,6 +109,18 @@ func TestStorage(t *testing.T) {
 
 		for _, selectedEvent := range selectedEvents {
 			require.True(t, containsEvent(events, selectedEvent))
+			//require.Nil(t, s.DeleteEvent(ctx, selectedEvent.ID))
+		}
+
+		events = selectedEvents
+		events[0].Description = "Прийти на кв к Жеке"
+		require.Nil(t, s.UpdateEvent(ctx, events[0]))
+
+		selectedEvents, err = s.SelectEvents(ctx)
+		require.Nil(t, err)
+
+		for _, selectedEvent := range selectedEvents {
+			require.True(t, containsEvent(events, selectedEvent))
 			require.Nil(t, s.DeleteEvent(ctx, selectedEvent.ID))
 		}
 
