@@ -36,14 +36,12 @@ func TestServer(t *testing.T) {
 
 	serv := NewServer(log, application, &servConfig)
 
-	go func() {
-		err := serv.Start()
-		require.Nil(t, err)
-	}()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
-	defer func() {
-		err := serv.Stop()
-		require.Nil(t, err)
+	go func() {
+		defer wg.Done()
+		_ = serv.Start()
 	}()
 
 	mutex := sync.Mutex{}
@@ -51,6 +49,11 @@ func TestServer(t *testing.T) {
 
 	userCase(t, &mutex, address)
 	eventCase(t, &mutex, address)
+
+	err := serv.Stop()
+	require.Nil(t, err)
+
+	wg.Wait()
 }
 
 func containsUser(users []dto.User, u dto.User) bool {

@@ -40,7 +40,7 @@ migrateup:
 	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose up
 
 test:
-	go test -race ./internal/config ./internal/logger ./internal/storage/memory
+	go test -race test ./...
 
 migratedown:
 	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose down
