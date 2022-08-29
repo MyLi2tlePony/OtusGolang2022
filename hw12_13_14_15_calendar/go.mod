@@ -12,4 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8 // indirect
 	golang.org/x/sys v0.0.0-20220808155132-1c4a2a72c664 // indirect
+	google.golang.org/grpc v1.49.0
+	google.golang.org/protobuf v1.28.1
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

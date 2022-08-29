@@ -21,10 +21,10 @@ func TestNew(t *testing.T) {
 		}()
 
 		expectedConfig := Config{
-			Logger: LoggerConfig{
+			Logger: &LoggerConfig{
 				Level: "info",
 			},
-			Database: DatabaseConfig{
+			Database: &DatabaseConfig{
 				Prefix:       "postgresql",
 				DatabaseName: "postgres",
 				Host:         "localhost",
@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 				UserName:     "postgres",
 				Password:     "1234512345",
 			},
-			Server: ServerConfig{
+			Server: &ServerConfig{
 				Host: "localhost",
 				Port: "2345",
 			},

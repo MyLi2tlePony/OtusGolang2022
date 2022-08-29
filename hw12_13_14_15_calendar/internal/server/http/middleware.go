@@ -5,14 +5,16 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server"
 )
 
 type middleware struct {
-	logger  Logger
+	logger  server.Logger
 	Handler http.Handler
 }
 
-func newMiddleware(logger Logger, httpHandler http.Handler) *middleware {
+func newMiddleware(logger server.Logger, httpHandler http.Handler) *middleware {
 	return &middleware{
 		logger:  logger,
 		Handler: httpHandler,

@@ -37,21 +37,6 @@ func (s *Storage) SelectUsers(ctx context.Context) (users []storage.User, err er
 		}
 	}()
 
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return users, err
-	}
-
-	defer func() {
-		if err == nil {
-			err = tx.Commit(ctx)
-		} else {
-			if rollbackErr := tx.Rollback(ctx); err != nil {
-				err = rollbackErr
-			}
-		}
-	}()
-
 	rows, err := conn.Query(ctx, sql)
 	if err != nil {
 		return users, err
@@ -85,21 +70,6 @@ func (s *Storage) CreateUser(ctx context.Context, user storage.User) error {
 		}
 	}()
 
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err == nil {
-			err = tx.Commit(ctx)
-		} else {
-			if rollbackErr := tx.Rollback(ctx); err != nil {
-				err = rollbackErr
-			}
-		}
-	}()
-
 	_, err = conn.Exec(ctx, sql, user.FirstName, user.LastName, user.Email, user.Age)
 	return err
 }
@@ -115,21 +85,6 @@ func (s *Storage) DeleteUser(ctx context.Context, userID string) error {
 	defer func() {
 		if closeErr := conn.Close(ctx); closeErr != nil {
 			err = closeErr
-		}
-	}()
-
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err == nil {
-			err = tx.Commit(ctx)
-		} else {
-			if rollbackErr := tx.Rollback(ctx); err != nil {
-				err = rollbackErr
-			}
 		}
 	}()
 
@@ -154,21 +109,6 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) (err err
 		}
 	}()
 
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err == nil {
-			err = tx.Commit(ctx)
-		} else {
-			if rollbackErr := tx.Rollback(ctx); err != nil {
-				err = rollbackErr
-			}
-		}
-	}()
-
 	_, err = conn.Exec(ctx, sql,
 		event.Title, event.Description, event.Beginning, event.Finish, event.Notification, event.UserID)
 	return err
@@ -185,21 +125,6 @@ func (s *Storage) DeleteEvent(ctx context.Context, eventID string) error {
 	defer func() {
 		if closeErr := conn.Close(ctx); closeErr != nil {
 			err = closeErr
-		}
-	}()
-
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err == nil {
-			err = tx.Commit(ctx)
-		} else {
-			if rollbackErr := tx.Rollback(ctx); err != nil {
-				err = rollbackErr
-			}
 		}
 	}()
 
@@ -226,21 +151,6 @@ func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) (err err
 		}
 	}()
 
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if err == nil {
-			err = tx.Commit(ctx)
-		} else {
-			if rollbackErr := tx.Rollback(ctx); err != nil {
-				err = rollbackErr
-			}
-		}
-	}()
-
 	_, err = conn.Exec(ctx, sql,
 		event.ID, event.Title, event.Description, event.Beginning, event.Finish, event.Notification, event.UserID)
 	return err
@@ -258,21 +168,6 @@ func (s *Storage) SelectEvents(ctx context.Context) (events []storage.Event, err
 	defer func() {
 		if closeErr := conn.Close(ctx); closeErr != nil {
 			err = closeErr
-		}
-	}()
-
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return events, err
-	}
-
-	defer func() {
-		if err == nil {
-			err = tx.Commit(ctx)
-		} else {
-			if rollbackErr := tx.Rollback(ctx); err != nil {
-				err = rollbackErr
-			}
 		}
 	}()
 

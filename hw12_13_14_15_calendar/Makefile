@@ -34,7 +34,6 @@ lint: install-lint-deps
 postgres:
 	docker run --name postgresdb --env POSTGRES_PASSWORD="1234512345" --publish "5436:5432" --detach --rm postgres
 
-createdb:
 	docker exec -it postgresdb createdb --username postgres calendardb
 
 migrateup:
@@ -46,7 +45,7 @@ test:
 migratedown:
 	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose down
 
-dropdb:
-	docker exec -it postgresdb dropdb calendardb
+generate:
+	protoc --go_out=internal/server/grpc --go-grpc_out=internal/server/grpc api/CalendarService.proto
 
-.PHONY: build run build-img run-img version lint pull-postgres postgres createdb migrateup test migratedown dropdb
+.PHONY: build run build-img run-img version lint pull-postgres postgres migrateup test migratedown dropdb generate

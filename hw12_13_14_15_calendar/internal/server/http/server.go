@@ -1,47 +1,31 @@
 package internalhttp
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/http"
 
-	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config"
-	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server/dto"
+	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server"
 )
 
 type Server struct {
-	app    Application
-	logger Logger
+	app    server.Application
+	logger server.Logger
 
 	srv *http.Server
 }
 
-type Logger interface {
-	Fatal(string)
-	Error(string)
-	Warn(string)
-	Info(string)
-	Debug(string)
-	Trace(string)
-}
-
-type Application interface {
-	CreateUser(ctx context.Context, dtoUser dto.User) error
-	SelectUsers(ctx context.Context) ([]dto.User, error)
-	DeleteUser(ctx context.Context, id string) error
-
-	CreateEvent(ctx context.Context, dtoEvent dto.Event) error
-	SelectEvents(ctx context.Context) ([]dto.Event, error)
-	UpdateEvent(ctx context.Context, dtoEvent dto.Event) error
-	DeleteEvent(ctx context.Context, id string) error
-}
-
-func NewServer(logger Logger, app Application, config config.ServerConfig) *Server {
-	handler := newHandler(logger)
+func NewServer(logger server.Logger, app server.Application, config server.Config) *Server {
+	handler := newHandler(logger, app)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/hello", handler.getHello)
+	mux.HandleFunc("/create/user", handler.createUser)
+	mux.HandleFunc("/select/users", handler.selectUsers)
+	mux.HandleFunc("/delete/user", handler.deleteUser)
+	mux.HandleFunc("/create/event", handler.createEvent)
+	mux.HandleFunc("/select/events", handler.selectEvents)
+	mux.HandleFunc("/update/event", handler.updateEvent)
+	mux.HandleFunc("/delete/event", handler.deleteEvent)
 
 	middleware := newMiddleware(logger, mux)
 	middleware.logging()
@@ -50,14 +34,14 @@ func NewServer(logger Logger, app Application, config config.ServerConfig) *Serv
 		logger: logger,
 		app:    app,
 		srv: &http.Server{
-			Addr:    net.JoinHostPort(config.Host, config.Port),
+			Addr:    net.JoinHostPort(config.GetHost(), config.GetPort()),
 			Handler: middleware.Handler,
 		},
 	}
 }
 
 func (s *Server) Start() error {
-	s.logger.Info(fmt.Sprintf("server listening: %s", s.srv.Addr))
+	s.logger.Info(fmt.Sprintf("http server listening: %s", s.srv.Addr))
 
 	if err := s.srv.ListenAndServe(); err != nil {
 		return err

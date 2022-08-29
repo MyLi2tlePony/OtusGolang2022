@@ -14,21 +14,29 @@ import (
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/app"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/logger"
+	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server"
+	internalgrpc "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server/http"
 	memorystorage "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage/sql"
+	"google.golang.org/grpc"
 )
 
 var (
-	configPath    string
-	configStorage string
+	ErrInvalidStorageType = errors.New("invalid storage type")
+	ErrInvalidServerType  = errors.New("invalid server type")
+
+	configPath  string
+	storageType string
+	serverType  string
 )
 
 func init() {
 	defaultConfigPath := path.Join("configs", "config.toml")
 	flag.StringVar(&configPath, "config", defaultConfigPath, "Path to configuration file")
 
-	flag.StringVar(&configStorage, "storage", "mem", "Type of storage")
+	flag.StringVar(&storageType, "storage", "sql", "Type of storage. Expected values: \"mem\" || \"sql\"")
+	flag.StringVar(&serverType, "server", "grpc", "Type of server. Expected values: \"http\" || \"grpc\"")
 }
 
 func main() {
@@ -45,19 +53,33 @@ func main() {
 		return
 	}
 
-	log := logger.New(conf.Logger)
+	log := logger.New(*conf.Logger)
 
 	var application *app.Calendar
 
-	if configStorage == "mem" {
+	switch storageType {
+	case "mem":
 		storage := memorystorage.New()
 		application = app.New(storage)
-	} else {
-		storage := sqlstorage.New(conf.Database)
+	case "sql":
+		storage := sqlstorage.New(*conf.Database)
 		application = app.New(storage)
+	default:
+		log.Error(ErrInvalidStorageType.Error())
+		os.Exit(1)
 	}
 
-	server := internalhttp.NewServer(log, application, conf.Server)
+	var serv server.Server
+
+	switch serverType {
+	case "http":
+		serv = internalhttp.NewServer(log, application, conf.Server)
+	case "grpc":
+		serv = internalgrpc.NewServer(log, application, conf.Server)
+	default:
+		log.Error(ErrInvalidServerType.Error())
+		os.Exit(1)
+	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -66,18 +88,19 @@ func main() {
 	go func() {
 		<-ctx.Done()
 
-		if err := server.Stop(); err != nil {
-			log.Error("failed to stop http server: " + err.Error())
+		if err := serv.Stop(); err != nil {
+			log.Error("failed to stop serv: " + err.Error())
 		}
 	}()
 
 	log.Info("app is running...")
 
-	if err := server.Start(); !errors.Is(err, http.ErrServerClosed) && err != nil {
-		log.Error("failed to start http server: " + err.Error())
+	err = serv.Start()
+	if !errors.Is(err, grpc.ErrServerStopped) && !errors.Is(err, http.ErrServerClosed) && err != nil {
+		log.Error("failed to start serv: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
 
-	log.Info("server closed")
+	log.Info("serv closed")
 }
