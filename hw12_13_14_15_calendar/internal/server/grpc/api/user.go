@@ -24,10 +24,10 @@ func NewUserServer(logger server.Logger, app server.Application) *UserServer {
 func (serv *UserServer) SelectUsers(void *Void, selectUsers UserService_SelectUsersServer) error {
 	defer func(start time.Time) {
 		duration := time.Since(start)
-		serv.Log(selectUsers.Context(), start, duration, "SelectUsers")
+		serv.Log(selectUsers.Context(), start, duration, "SelectUsers") //nolint:typecheck
 	}(time.Now())
 
-	users, err := serv.app.SelectUsers(selectUsers.Context())
+	users, err := serv.app.SelectUsers(selectUsers.Context()) //nolint:typecheck
 	if err != nil {
 		return err
 	}
