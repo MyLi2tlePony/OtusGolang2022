@@ -1,0 +1,30 @@
+[logger]
+level = "info"
+
+[connection]
+login = "guest"
+password = "guest"
+host = "localhost"
+port = "5672"
+
+[publish]
+exchange = ""
+key = "notification"
+contentType = "text/plain"
+mandatory = false
+immediate = false
+
+[queue]
+name = "notification"
+durable = false
+autoDelete = false
+exclusive = false
+noWait = false
+
+[database]
+Prefix       = "postgresql"
+DatabaseName = "calendardb"
+Host         = "localhost"
+Port         = "5436"
+UserName     = "postgres"
+Password     = "1234512345"

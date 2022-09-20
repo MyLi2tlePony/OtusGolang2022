@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage"
@@ -20,6 +21,7 @@ type Storage interface {
 
 	CreateEvent(context.Context, storage.Event) error
 	SelectEvents(context.Context) ([]storage.Event, error)
+	SelectEventsByTime(context.Context, time.Time) ([]storage.Event, error)
 	UpdateEvent(context.Context, storage.Event) error
 	DeleteEvent(context.Context, string) error
 }
@@ -120,6 +122,25 @@ func (calendar *Calendar) SelectEvents(ctx context.Context) ([]server.Event, err
 	events := make([]server.Event, 0)
 
 	storageEvents, err := calendar.storage.SelectEvents(ctx)
+	if err != nil {
+		return events, err
+	}
+
+	for _, storageEvent := range storageEvents {
+		event := storageEvent
+		events = append(events, &event)
+	}
+
+	return events, nil
+}
+
+func (calendar *Calendar) SelectEventsByTime(ctx context.Context, t time.Time) ([]server.Event, error) {
+	calendar.mutex.RLock()
+	defer calendar.mutex.RUnlock()
+
+	events := make([]server.Event, 0)
+
+	storageEvents, err := calendar.storage.SelectEventsByTime(ctx, t)
 	if err != nil {
 		return events, err
 	}

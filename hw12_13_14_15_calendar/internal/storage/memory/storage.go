@@ -3,6 +3,7 @@ package memorystorage
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
@@ -60,6 +61,18 @@ func (s *Storage) SelectEvents(ctx context.Context) ([]storage.Event, error) {
 
 	for _, event := range s.events {
 		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+func (s *Storage) SelectEventsByTime(ctx context.Context, t time.Time) ([]storage.Event, error) {
+	events := make([]storage.Event, 0)
+
+	for _, event := range s.events {
+		if event.Notification.Equal(t) {
+			events = append(events, event)
+		}
 	}
 
 	return events, nil

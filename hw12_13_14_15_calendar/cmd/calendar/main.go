@@ -12,7 +12,7 @@ import (
 	"syscall"
 
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/app"
-	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config"
+	config "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config/calendar"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/logger"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server"
 	internalgrpc "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server/grpc"
@@ -32,7 +32,7 @@ var (
 )
 
 func init() {
-	defaultConfigPath := path.Join("configs", "config.toml")
+	defaultConfigPath := path.Join("configs", "calendar", "config.toml")
 	flag.StringVar(&configPath, "config", defaultConfigPath, "Path to configuration file")
 
 	flag.StringVar(&storageType, "storage", "sql", "Type of storage. Expected values: \"mem\" || \"sql\"")
@@ -53,7 +53,7 @@ func main() {
 		return
 	}
 
-	log := logger.New(*conf.Logger)
+	log := logger.New(conf.Logger)
 
 	var application *app.Calendar
 
@@ -62,7 +62,11 @@ func main() {
 		storage := memorystorage.New()
 		application = app.New(storage)
 	case "sql":
-		storage := sqlstorage.New(*conf.Database)
+		dbConf := conf.Database
+		connString := fmt.Sprintf("%s://%s:%s@%s:%s/%s",
+			dbConf.Prefix, dbConf.UserName, dbConf.Password, dbConf.Host, dbConf.Port, dbConf.DatabaseName)
+
+		storage := sqlstorage.New(connString)
 		application = app.New(storage)
 	default:
 		log.Error(ErrInvalidStorageType.Error())

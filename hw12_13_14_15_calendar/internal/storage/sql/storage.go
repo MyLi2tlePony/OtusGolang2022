@@ -3,8 +3,8 @@ package sqlstorage
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage"
 	pgx "github.com/jackc/pgx/v4"
 )
@@ -13,10 +13,7 @@ type Storage struct {
 	connString string
 }
 
-func New(config config.DatabaseConfig) *Storage {
-	connString := fmt.Sprintf("%s://%s:%s@%s:%s/%s",
-		config.Prefix, config.UserName, config.Password, config.Host, config.Port, config.DatabaseName)
-
+func New(connString string) *Storage {
 	return &Storage{
 		connString: connString,
 	}
@@ -154,6 +151,42 @@ func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) (err err
 	_, err = conn.Exec(ctx, sql,
 		event.ID, event.Title, event.Description, event.Beginning, event.Finish, event.Notification, event.UserID)
 	return err
+}
+
+func (s *Storage) SelectEventsByTime(ctx context.Context, t time.Time) (events []storage.Event, err error) {
+	events = make([]storage.Event, 0)
+	sql := "SELECT id, title, description, beginning, finish, notification, userid FROM events WHERE notification = " +
+		fmt.Sprintf("'%02d-%02d-%02d %02d:%02d';", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
+
+	conn, err := pgx.Connect(ctx, s.connString)
+	if err != nil {
+		return events, err
+	}
+
+	defer func() {
+		if closeErr := conn.Close(ctx); closeErr != nil {
+			err = closeErr
+		}
+	}()
+
+	rows, err := conn.Query(ctx, sql)
+	if err != nil {
+		return events, err
+	}
+
+	for rows.Next() {
+		var event storage.Event
+
+		err = rows.Scan(&event.ID, &event.Title, &event.Description,
+			&event.Beginning, &event.Finish, &event.Notification, &event.UserID)
+		if err != nil {
+			return events, err
+		}
+
+		events = append(events, event)
+	}
+
+	return events, nil
 }
 
 func (s *Storage) SelectEvents(ctx context.Context) (events []storage.Event, err error) {

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS Users (
 CREATE TABLE IF NOT EXISTS Events (
     ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     Title CHARACTER VARYING(30),
-    Description CHARACTER VARYING(30),
+    Description CHARACTER VARYING(1000),
     Beginning TIMESTAMP,
     Finish TIMESTAMP,
     Notification TIMESTAMP,

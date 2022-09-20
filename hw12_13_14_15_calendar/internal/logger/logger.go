@@ -4,7 +4,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -13,11 +12,15 @@ type Logger struct {
 	Level zerolog.Level
 }
 
-func New(config config.LoggerConfig) *Logger {
+type Config interface {
+	GetLevel() string
+}
+
+func New(config Config) *Logger {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
-	level := getLevel(config.Level)
+	level := getLevel(config.GetLevel())
 	zerolog.SetGlobalLevel(level)
 	return &Logger{
 		Level: level,
