@@ -3,12 +3,12 @@ level = "info"
 
 [database]
 Prefix       = "postgresql"
-DatabaseName = "calendardb"
-Host         = "localhost"
-Port         = "5436"
+DatabaseName = "postgres"
+Host         = "rabbitmq"
+Port         = ""
 UserName     = "postgres"
 Password     = "1234512345"
 
 [server]
-Host         = "localhost"
+Host         = "0.0.0.0"
 Port         = "2345"

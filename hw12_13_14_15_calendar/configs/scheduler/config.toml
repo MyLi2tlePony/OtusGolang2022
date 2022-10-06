@@ -4,8 +4,8 @@ level = "info"
 [connection]
 login = "guest"
 password = "guest"
-host = "localhost"
-port = "5672"
+host = "rabbitmq"
+port = ""
 
 [publish]
 exchange = ""
@@ -23,8 +23,8 @@ noWait = false
 
 [database]
 Prefix       = "postgresql"
-DatabaseName = "calendardb"
-Host         = "localhost"
-Port         = "5436"
+DatabaseName = "postgres"
+Host         = "postgres"
+Port         = ""
 UserName     = "postgres"
 Password     = "1234512345"

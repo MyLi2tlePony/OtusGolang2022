@@ -102,6 +102,7 @@ func main() {
 		}
 	}()
 
+	log.Info("scheduler is running...")
 	wg.Wait()
 }
 

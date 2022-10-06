@@ -1,1 +1,69 @@
-version: "3"
+version: "3.9"
+
+services:
+  postgres:
+    container_name: postgresdb
+    image: postgres:14.5
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "1234512345"
+    ports:
+      - "5436:5432"
+    networks:
+      - default
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    networks:
+      - default
+
+  calendar:
+    container_name: calendar
+    build:
+      context: ..
+      dockerfile: ./build/calendar/Dockerfile
+    ports:
+      - "2345:2345"
+    networks:
+      - default
+
+  scheduler:
+    container_name: scheduler
+    build:
+      context: ..
+      dockerfile: ./build/scheduler/Dockerfile
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - default
+
+  sender:
+    container_name: sender
+    build:
+      context: ..
+      dockerfile: ./build/sender/Dockerfile
+    depends_on:
+        - rabbitmq
+    networks:
+      - default
+
+  migrate:
+    container_name: migrate
+    image: migrate/migrate
+    volumes:
+      - ../migrations:/migrations
+    command: ["-path", "migrations", "-database", "postgresql://postgres:1234512345@postgres:/postgres?sslmode=disable", "up"]
+    depends_on:
+      - postgres
+    networks:
+      - default
+    restart: on-failure
+
+networks:
+  default:
+    driver: bridge

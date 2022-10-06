@@ -19,7 +19,7 @@ test:
 	go test -race ./internal/...
 
 install-lint-deps:
-	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.41.1
+	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.0
 
 lint: install-lint-deps
 	golangci-lint run ./...
@@ -70,9 +70,16 @@ version: build-calendar
 
 migrate-up:
 	docker exec -it postgresdb createdb --username postgres calendardb
-	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/calendardb?sslmode=disable" -verbose up
+	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/postgres?sslmode=disable" -verbose up
 
-.PHONY: generate rabbitmq postgre\
+up:
+	cd deployments && docker-compose build && docker-compose up
+
+down:
+	cd deployments && docker-compose down
+
+.PHONY: up down \
+		generate rabbitmq postgre \
 		install-lint-deps lint test \
 		build build-calendar build-scheduler build-sender \
  		run-calendar run-scheduler run-sender \
