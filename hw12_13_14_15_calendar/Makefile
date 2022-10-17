@@ -18,6 +18,9 @@ LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%d
 test:
 	go test -race ./internal/...
 
+integration-tests:
+	cd deployments && docker-compose -f docker-compose.test.yaml build && docker-compose -f docker-compose.test.yaml up
+
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.0
 
@@ -73,7 +76,7 @@ migrate-up:
 	migrate -path migrations -database "postgresql://postgres:1234512345@localhost:5436/postgres?sslmode=disable" -verbose up
 
 up:
-	cd deployments && docker-compose build && docker-compose up
+	cd deployments && docker-compose -f docker-compose.yaml build && docker-compose -f docker-compose.yaml up
 
 down:
 	cd deployments && docker-compose down

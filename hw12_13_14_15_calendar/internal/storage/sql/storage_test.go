@@ -9,27 +9,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config/calendar"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStorage(t *testing.T) {
-	conf := calendar.DatabaseConfig{
-		Prefix:       "postgresql",
-		DatabaseName: "calendardb",
-		Host:         "localhost",
-		Port:         "5436",
-		UserName:     "postgres",
-		Password:     "1234512345",
-	}
 	mutex := sync.Mutex{}
 
 	t.Run("user case", func(t *testing.T) {
 		mutex.Lock()
 		defer mutex.Unlock()
 
-		s := New(conf)
+		s := New("postgresql://postgres:1234512345@postgres:/postgres?sslmode=disable")
 		ctx := context.Background()
 
 		users := []storage.User{
@@ -68,7 +59,7 @@ func TestStorage(t *testing.T) {
 		mutex.Lock()
 		defer mutex.Unlock()
 
-		s := New(conf)
+		s := New("postgresql://postgres:1234512345@postgres:/postgres?sslmode=disable")
 		ctx := context.Background()
 
 		user := storage.User{
