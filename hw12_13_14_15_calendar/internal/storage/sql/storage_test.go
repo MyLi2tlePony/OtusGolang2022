@@ -1,7 +1,11 @@
-package memorystorage
+//go:build integration
+// +build integration
+
+package sqlstorage
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -10,8 +14,13 @@ import (
 )
 
 func TestStorage(t *testing.T) {
+	mutex := sync.Mutex{}
+
 	t.Run("user case", func(t *testing.T) {
-		s := New()
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		s := New("postgresql://postgres:1234512345@postgres:/postgres?sslmode=disable")
 		ctx := context.Background()
 
 		users := []storage.User{
@@ -47,7 +56,10 @@ func TestStorage(t *testing.T) {
 	})
 
 	t.Run("event case", func(t *testing.T) {
-		s := New()
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		s := New("postgresql://postgres:1234512345@postgres:/postgres?sslmode=disable")
 		ctx := context.Background()
 
 		user := storage.User{
@@ -66,9 +78,9 @@ func TestStorage(t *testing.T) {
 		events := []storage.Event{
 			{
 				Title:        "Встреча с другом",
-				Description:  "Прийти на кв к Жеке, не забыть вкусняшки",
+				Description:  "",
 				Beginning:    time.Date(2022, time.August, 22, 18, 0, 0, 0, time.UTC),
-				Finish:       time.Date(2022, time.August, 22, 23, 0, 0, 0, time.UTC),
+				Finish:       time.Date(2022, time.August, 22, 20, 0, 0, 0, time.UTC),
 				Notification: time.Date(2022, time.August, 22, 13, 0, 0, 0, time.UTC),
 				UserID:       user.ID,
 			},
@@ -101,7 +113,7 @@ func TestStorage(t *testing.T) {
 		}
 
 		events = selectedEvents
-		events[0].Description = "Прийти на кв к Жеке, не забыть вкусняшки и заранее заказать пиццу"
+		events[0].Description = "Прийти на кв к Жеке"
 		require.Nil(t, s.UpdateEvent(ctx, events[0]))
 
 		selectedEvents, err = s.SelectEvents(ctx)
@@ -112,7 +124,14 @@ func TestStorage(t *testing.T) {
 			require.Nil(t, s.DeleteEvent(ctx, selectedEvent.ID))
 		}
 
+		selectedEvents, err = s.SelectEvents(ctx)
+		require.Nil(t, err)
+		require.Len(t, selectedEvents, 0)
+
 		require.Nil(t, s.DeleteUser(ctx, user.ID))
+		selectedUsers, err = s.SelectUsers(ctx)
+		require.Nil(t, err)
+		require.Len(t, selectedUsers, 0)
 	})
 }
 
@@ -130,8 +149,7 @@ func containsUser(users []storage.User, u storage.User) bool {
 
 func containsEvent(events []storage.Event, e storage.Event) bool {
 	for _, event := range events {
-		if event.UserID == e.UserID &&
-			event.Finish == e.Finish &&
+		if event.Finish == e.Finish &&
 			event.Notification == e.Notification &&
 			event.Beginning == e.Beginning &&
 			event.Description == e.Description &&

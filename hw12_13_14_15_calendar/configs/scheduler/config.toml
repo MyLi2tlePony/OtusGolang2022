@@ -1,0 +1,30 @@
+[logger]
+level = "info"
+
+[connection]
+login = "guest"
+password = "guest"
+host = "rabbitmq"
+port = ""
+
+[publish]
+exchange = ""
+key = "notification"
+contentType = "text/plain"
+mandatory = false
+immediate = false
+
+[queue]
+name = "notification"
+durable = false
+autoDelete = false
+exclusive = false
+noWait = false
+
+[database]
+Prefix       = "postgresql"
+DatabaseName = "postgres"
+Host         = "postgres"
+Port         = ""
+UserName     = "postgres"
+Password     = "1234512345"

@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    container_name: postgresdb
+    image: postgres:14.5
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "1234512345"
+    ports:
+      - "5436:5432"
+    networks:
+      - default
+
+  migrate:
+    container_name: migrate
+    image: migrate/migrate
+    volumes:
+      - ../migrations:/migrations
+    command: ["-path", "migrations", "-database", "postgresql://postgres:1234512345@postgres:/postgres?sslmode=disable", "up"]
+    depends_on:
+      - postgres
+    networks:
+      - default
+    restart: on-failure
+
+  migrator:
+    container_name: test
+    build:
+      context: ..
+      dockerfile: ./build/test/Dockerfile
+    depends_on:
+      - postgres
+      - migrate
+    networks:
+      - default
+    restart: on-failure
+
+networks:
+  default:
+    driver: bridge

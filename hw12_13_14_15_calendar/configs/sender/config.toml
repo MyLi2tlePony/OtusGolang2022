@@ -1,0 +1,24 @@
+[logger]
+level = "info"
+
+[connection]
+login = "guest"
+password = "guest"
+host = "rabbitmq"
+port = ""
+
+[consume]
+queue = "notification"
+consumer = ""
+autoAck = true
+exclusive = false
+noLocal = false
+noWait = false
+
+[queue]
+name = "notification"
+durable = false
+autoDelete = false
+exclusive = false
+noWait = false
+

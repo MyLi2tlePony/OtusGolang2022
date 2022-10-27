@@ -2,22 +2,41 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
-	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/app"
+	config "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config/calendar"
+	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/logger"
+	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server"
+	internalgrpc "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server/grpc"
+	internalhttp "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server/http"
+	memorystorage "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage/sql"
+	"google.golang.org/grpc"
 )
 
-var configFile string
+var (
+	ErrInvalidStorageType = errors.New("invalid storage type")
+	ErrInvalidServerType  = errors.New("invalid server type")
+
+	configPath  string
+	storageType string
+	serverType  string
+)
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	defaultConfigPath := path.Join("configs", "calendar", "config.toml")
+	flag.StringVar(&configPath, "config", defaultConfigPath, "Path to configuration file")
+
+	flag.StringVar(&storageType, "storage", "sql", "Type of storage. Expected values: \"mem\" || \"sql\"")
+	flag.StringVar(&serverType, "server", "grpc", "Type of server. Expected values: \"http\" || \"grpc\"")
 }
 
 func main() {
@@ -28,13 +47,43 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	conf, err := config.New(configPath)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	log := logger.New(conf.Logger)
 
-	server := internalhttp.NewServer(logg, calendar)
+	var application *app.Calendar
+
+	switch storageType {
+	case "mem":
+		storage := memorystorage.New()
+		application = app.New(storage)
+	case "sql":
+		dbConf := conf.Database
+		connString := fmt.Sprintf("%s://%s:%s@%s:%s/%s",
+			dbConf.Prefix, dbConf.UserName, dbConf.Password, dbConf.Host, dbConf.Port, dbConf.DatabaseName)
+
+		storage := sqlstorage.New(connString)
+		application = app.New(storage)
+	default:
+		log.Error(ErrInvalidStorageType.Error())
+		os.Exit(1)
+	}
+
+	var serv server.Server
+
+	switch serverType {
+	case "http":
+		serv = internalhttp.NewServer(log, application, conf.Server)
+	case "grpc":
+		serv = internalgrpc.NewServer(log, application, conf.Server)
+	default:
+		log.Error(ErrInvalidServerType.Error())
+		os.Exit(1)
+	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -43,19 +92,19 @@ func main() {
 	go func() {
 		<-ctx.Done()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		if err := serv.Stop(); err != nil {
+			log.Error("failed to stop serv: " + err.Error())
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	log.Info("app is running...")
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
+	err = serv.Start()
+	if !errors.Is(err, grpc.ErrServerStopped) && !errors.Is(err, http.ErrServerClosed) && err != nil {
+		log.Error("failed to start serv: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
+
+	log.Info("serv closed")
 }
