@@ -12,7 +12,7 @@ TL_PID=$!
 
 sleep 5
 kill ${TL_PID} 2>/dev/null || true
-kill ${NC_PID} 2>/dev/null || true
+kill ${NC_PID} 2>/dev/null || true 
 
 function fileEquals() {
   local fileData
