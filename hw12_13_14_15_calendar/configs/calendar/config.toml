@@ -1,0 +1,14 @@
+[logger]
+level = "info"
+
+[database]
+Prefix       = "postgresql"
+DatabaseName = "postgres"
+Host         = "rabbitmq"
+Port         = ""
+UserName     = "postgres"
+Password     = "1234512345"
+
+[server]
+Host         = "0.0.0.0"
+Port         = "2345"
