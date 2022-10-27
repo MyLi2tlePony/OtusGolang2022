@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/app"
-	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config"
+	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/config/calendar"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/logger"
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server/http/dto"
 	memorystorage "github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/storage/memory"
@@ -19,17 +19,17 @@ import (
 )
 
 func TestServer(t *testing.T) {
-	logConfig := config.LoggerConfig{
+	logConfig := calendar.LoggerConfig{
 		Level: "info",
 	}
 
-	log := logger.New(logConfig)
+	log := logger.New(&logConfig)
 	memoryStorage := memorystorage.New()
 	application := app.New(memoryStorage)
 
 	host := "localhost"
 	port := "9090"
-	servConfig := config.ServerConfig{
+	servConfig := calendar.ServerConfig{
 		Host: host,
 		Port: port,
 	}

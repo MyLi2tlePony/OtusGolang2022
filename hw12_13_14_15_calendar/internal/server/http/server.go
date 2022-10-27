@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/MyLi2tlePony/OtusGolang2022/hw12_13_14_15_calendar/internal/server"
 )
@@ -34,8 +35,11 @@ func NewServer(logger server.Logger, app server.Application, config server.Confi
 		logger: logger,
 		app:    app,
 		srv: &http.Server{
-			Addr:    net.JoinHostPort(config.GetHost(), config.GetPort()),
-			Handler: middleware.Handler,
+			ReadTimeout:  2 * time.Second,
+			WriteTimeout: 2 * time.Second,
+			IdleTimeout:  2 * time.Second,
+			Addr:         net.JoinHostPort(config.GetHost(), config.GetPort()),
+			Handler:      middleware.Handler,
 		},
 	}
 }

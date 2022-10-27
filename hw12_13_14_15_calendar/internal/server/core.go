@@ -31,6 +31,7 @@ type Application interface {
 
 	CreateEvent(context.Context, Event) error
 	SelectEvents(context.Context) ([]Event, error)
+	SelectEventsByTime(context.Context, time.Time) ([]Event, error)
 	UpdateEvent(context.Context, Event) error
 	DeleteEvent(context.Context, string) error
 }

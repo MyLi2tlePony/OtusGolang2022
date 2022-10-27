@@ -25,10 +25,10 @@ func NewEventServer(logger server.Logger, app server.Application) *EventServer {
 func (serv *EventServer) SelectEvents(void *Void, selectEvents EventService_SelectEventsServer) error {
 	defer func(start time.Time) {
 		duration := time.Since(start)
-		serv.Log(selectEvents.Context(), start, duration, "SelectEvents") //nolint:typecheck
+		serv.Log(selectEvents.Context(), start, duration, "SelectEvents")
 	}(time.Now())
 
-	events, err := serv.app.SelectEvents(selectEvents.Context()) //nolint:typecheck
+	events, err := serv.app.SelectEvents(selectEvents.Context())
 	if err != nil {
 		return err
 	}

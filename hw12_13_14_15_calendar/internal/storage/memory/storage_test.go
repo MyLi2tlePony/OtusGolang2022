@@ -77,7 +77,7 @@ func TestStorage(t *testing.T) {
 				Description:  "Сделать презентацию",
 				Beginning:    time.Date(2022, time.August, 22, 20, 0, 0, 0, time.UTC),
 				Finish:       time.Date(2022, time.August, 22, 21, 30, 0, 0, time.UTC),
-				Notification: time.Date(2022, time.August, 22, 13, 0, 0, 0, time.UTC),
+				Notification: time.Date(2022, time.August, 22, 14, 0, 0, 0, time.UTC),
 				UserID:       user.ID,
 			},
 		}
@@ -86,7 +86,14 @@ func TestStorage(t *testing.T) {
 			require.Nil(t, s.CreateEvent(ctx, event))
 		}
 
-		selectedEvents, err := s.SelectEvents(ctx)
+		selectedEvents, err := s.SelectEventsByTime(ctx, events[0].Notification)
+		require.Nil(t, err)
+
+		for _, selectedEvent := range selectedEvents {
+			require.True(t, containsEvent(events, selectedEvent))
+		}
+
+		selectedEvents, err = s.SelectEvents(ctx)
 		require.Nil(t, err)
 
 		for _, selectedEvent := range selectedEvents {
